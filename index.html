@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>长征：像素史诗 · 纪念长征胜利九十周年</title>
+<style>
+@font-face {
+  font-family: 'FusionPixel';
+  src: url('assets/fonts/fusion-pixel-12px-proportional.woff2') format('woff2');
+  font-display: block;
+}
+:root {
+  --night: #2c3a4e; --ink: #161d29; --ink2: #1f2836; --panel: #232e3e;
+  --paper: #e8d5a3; --paper-dim: #b9a97f; --loess: #c2a36b; --flag: #a8322a;
+  --ember: #e08a3c; --gray: #6e7468; --moss: #8fae6a; --warn: #c0392b;
+  --gold: #d9a441; --river: #5f7d9c; --snow: #e8e6dc;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  background: var(--ink);
+  color: var(--paper);
+  font-family: 'FusionPixel', monospace;
+  font-size: 24px;
+  line-height: 28px;
+  overflow: hidden;
+  image-rendering: pixelated;
+  -webkit-font-smoothing: none;
+}
+#stars {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    radial-gradient(2px 2px at 12% 18%, #4a5a74 50%, transparent 51%),
+    radial-gradient(2px 2px at 34% 8%, #3d4c66 50%, transparent 51%),
+    radial-gradient(2px 2px at 58% 22%, #4a5a74 50%, transparent 51%),
+    radial-gradient(2px 2px at 76% 12%, #3d4c66 50%, transparent 51%),
+    radial-gradient(2px 2px at 90% 30%, #4a5a74 50%, transparent 51%),
+    radial-gradient(2px 2px at 22% 42%, #33405a 50%, transparent 51%),
+    radial-gradient(2px 2px at 66% 46%, #33405a 50%, transparent 51%),
+    radial-gradient(2px 2px at 44% 60%, #2c3a52 50%, transparent 51%),
+    radial-gradient(2px 2px at 84% 66%, #2c3a52 50%, transparent 51%);
+}
+#wrap { position: relative; z-index: 1; height: 100%; display: flex; align-items: center; justify-content: center; }
+#stagebox { position: relative; }
+#stage {
+  width: 960px; height: 540px; position: relative;
+  transform-origin: top left;
+  background: var(--ink2);
+  border: 2px solid #3a475c;
+  box-shadow: 0 0 0 2px var(--ink), 0 0 40px rgba(224,138,60,.08), 0 12px 60px rgba(0,0,0,.6);
+  overflow: hidden;
+}
+canvas#scene { position: absolute; top: 32px; left: 0; width: 960px; height: 288px; display: block; image-rendering: pixelated; background: var(--night); }
+#header {
+  position: absolute; top: 0; left: 0; right: 0; height: 32px; z-index: 12;
+  display: flex; align-items: center; gap: 8px; padding: 0 8px;
+  background: var(--ink);
+  border-bottom: 2px solid #3a475c;
+}
+#header .brand { color: var(--paper); text-shadow: 2px 2px 0 var(--flag); }
+#header .sp { flex: 1; }
+#header button {
+  font-family: inherit; font-size: 24px; line-height: 26px; background: var(--panel);
+  border: 2px solid #3a475c; color: var(--paper-dim); cursor: pointer; padding: 0 10px;
+}
+#header button:hover { color: var(--ember); border-color: var(--ember); }
+#logline {
+  position: absolute; top: 292px; left: 0; right: 0; height: 28px; z-index: 4;
+  color: var(--paper); overflow: hidden; white-space: nowrap; padding: 0 10px;
+  background: linear-gradient(rgba(22,29,41,.55), rgba(22,29,41,.92));
+  text-shadow: 1px 1px 0 var(--ink);
+}
+#hud { position: absolute; top: 320px; left: 0; right: 0; height: 56px; background: var(--panel); border-top: 2px solid #3a475c; padding: 0 8px; }
+#topline { display: flex; align-items: center; gap: 10px; height: 28px; }
+#actlabel { color: var(--loess); white-space: nowrap; }
+#turnlabel { color: var(--paper-dim); white-space: nowrap; }
+#miwrap { flex: 1; height: 10px; background: var(--ink); border: 2px solid #3a475c; position: relative; }
+#mibar { height: 100%; background: var(--loess); width: 0%; transition: width .4s steps(12); }
+#mistars { position: absolute; inset: 0; }
+#mistars i { position: absolute; top: 1px; width: 4px; height: 4px; background: var(--ember); }
+#milabel { color: var(--paper-dim); white-space: nowrap; }
+#statline { display: flex; gap: 10px; align-items: center; height: 28px; }
+#pursuit { display: flex; align-items: center; gap: 6px; color: var(--paper-dim); white-space: nowrap; }
+#pursuit.hot { color: var(--warn); }
+#pbar { width: 80px; height: 8px; background: var(--ink); border: 2px solid #3a475c; }
+#pfill { height: 100%; background: var(--gray); transition: width .3s steps(9); }
+#pursuit.hot #pfill { background: var(--warn); }
+.stat { flex: 1; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.stat b { font-weight: normal; color: var(--paper-dim); }
+.stat .v { color: var(--paper); min-width: 64px; text-align: right; }
+.stat .bar { flex: 1; height: 8px; background: var(--ink); border: 2px solid #3a475c; min-width: 24px; }
+.stat .bar i { display: block; height: 100%; transition: width .3s steps(10); }
+#trbar i { background: var(--moss); } #subar i { background: var(--gold); }
+#mobar i { background: var(--ember); } #fabar i { background: var(--paper); }
+.stat.low .v { color: var(--warn); }
+#newsline { position: absolute; top: 376px; left: 0; right: 0; height: 24px; color: #7d8ba3; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 0 8px; background: var(--ink2); }
+#controls { position: absolute; top: 400px; left: 0; right: 0; height: 140px; background: var(--ink2); border-top: 2px solid #3a475c; padding: 0 8px 4px; }
+#tempohint { height: 24px; color: #7d8ba3; overflow: hidden; white-space: nowrap; }
+#dockrow { display: flex; gap: 8px; height: 112px; }
+#tempo { display: flex; flex-direction: column; gap: 4px; width: 110px; flex: none; }
+.tempo {
+  flex: 1; background: var(--panel); border: 2px solid #3a475c; color: var(--paper-dim);
+  font-family: inherit; font-size: 24px; line-height: 26px; padding: 0 2px; cursor: pointer; text-align: center;
+}
+.tempo:hover { border-color: var(--loess); color: var(--paper); }
+.tempo.on { border-color: var(--ember); color: var(--ember); background: #2e2a26; box-shadow: inset 0 0 0 2px var(--ember); }
+#eventbox {
+  position: absolute; left: 8px; right: 8px; top: 168px; z-index: 6;
+  background: rgba(22,29,41,.92); border: 2px solid #3a475c; padding: 6px 10px;
+  max-height: 120px; overflow: hidden;
+}
+#eventbox.crisis { border-color: var(--warn); }
+#eventtitle { color: var(--ember); }
+#eventbox.crisis #eventtitle { color: var(--warn); }
+#eventtext { color: var(--paper); }
+#cards { display: flex; gap: 8px; flex: 1; min-width: 0; }
+.card {
+  flex: 1; min-width: 0; background: var(--panel); border: 2px solid #3a475c; cursor: pointer;
+  padding: 2px 6px; display: flex; flex-direction: column; gap: 2px; font-family: inherit;
+  color: var(--paper); text-align: left; font-size: 24px; line-height: 26px; position: relative;
+  transition: transform .08s steps(2); overflow: hidden;
+}
+.card:hover:not(:disabled) { border-color: var(--loess); transform: translateY(-2px); background: #2a3547; }
+.card:active:not(:disabled) { transform: translateY(0); }
+.card:disabled { opacity: .45; cursor: not-allowed; }
+.card:disabled .canchor { display: none; }
+.card .cname { color: var(--paper); padding-right: 52px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card .ctag { position: absolute; top: 4px; right: 6px; color: #7d8ba3; }
+.card .cfx { color: var(--moss); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card > span { flex: none; }
+.card .cfx .neg { color: var(--warn); }
+.card .canchor { color: #7d8ba3; margin-top: auto; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.card .creq { color: var(--gold); }
+.card.warn { border-color: #6b3a34; }
+.overlay {
+  position: absolute; inset: 0; z-index: 10; background: rgba(14,19,28,.92);
+  display: flex; flex-direction: column; padding: 40px 16px 16px; gap: 10px; overflow: hidden;
+}
+.overlay.hidden { display: none; }
+.ovtitle { color: var(--ember); font-size: 24px; line-height: 28px; }
+.ovsub { color: var(--paper-dim); }
+.ovbody { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 6px; }
+.btn {
+  font-family: inherit; font-size: 24px; line-height: 28px; cursor: pointer;
+  background: var(--panel); border: 2px solid var(--loess); color: var(--paper); padding: 6px 18px;
+}
+.btn:hover { background: var(--loess); color: var(--ink); }
+.btn.primary { border-color: var(--ember); color: var(--ember); }
+.btn.primary:hover { background: var(--ember); color: var(--ink); }
+.btn.ghost { border-color: #3a475c; color: var(--paper-dim); }
+.btn.ghost:hover { background: #3a475c; color: var(--paper); }
+.btnrow { display: flex; gap: 10px; flex: none; flex-wrap: wrap; }
+#title-screen { justify-content: flex-end; background: transparent; pointer-events: none; padding: 0; }
+#title-screen > * { pointer-events: auto; }
+#titleblock { background: rgba(14,19,28,.86); border-top: 2px solid #3a475c; padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; }
+#gametitle { font-size: 48px; line-height: 52px; color: var(--paper); text-shadow: 4px 4px 0 var(--flag); }
+#gamesub { color: var(--loess); }
+#prologue { color: var(--paper-dim); }
+#prologue p { opacity: 0; animation: rise .8s steps(8) forwards; }
+#prologue p:nth-child(2) { animation-delay: .7s; }
+#prologue p:nth-child(3) { animation-delay: 1.4s; }
+@keyframes rise { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.teamgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.teamcard { background: var(--panel); border: 2px solid #3a475c; padding: 8px; cursor: pointer; font-family: inherit; color: var(--paper); text-align: left; font-size: 24px; line-height: 28px; display: flex; flex-direction: column; gap: 4px; }
+.teamcard:hover { border-color: var(--ember); }
+.teamcard .tn { color: var(--ember); }
+.teamcard .td { color: var(--paper-dim); }
+.teamcard .tb { color: #7d8ba3; }
+.teamcard .tflag { width: 16px; height: 10px; background: var(--flag); display: inline-block; margin-right: 6px; }
+.formlist { display: flex; gap: 10px; }
+.formcard { flex: 1; background: var(--panel); border: 2px solid #3a475c; padding: 10px; cursor: pointer; font-family: inherit; color: var(--paper); text-align: left; font-size: 24px; line-height: 28px; }
+.formcard:hover { border-color: var(--ember); }
+.formcard .fd { color: var(--moss); }
+.formcard .fp { color: #7d8ba3; }
+#cut-screen { align-items: center; justify-content: center; background: rgba(14,19,28,.82); }
+#cutpanel { width: 760px; max-height: 480px; background: var(--ink2); border: 2px solid #3a475c; padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; }
+#cuttitle { font-size: 48px; line-height: 52px; color: var(--paper); text-shadow: 3px 3px 0 var(--flag); }
+.cutline { color: var(--paper); opacity: 0; animation: rise .7s steps(8) forwards; }
+.cutline:nth-child(2) { animation-delay: .5s; }
+.cutline:nth-child(3) { animation-delay: 1s; }
+.cutnote { color: var(--loess); border-left: 4px solid var(--flag); padding-left: 10px; margin-top: 6px; }
+#fork-screen { align-items: center; justify-content: center; }
+#forkpanel { width: 760px; background: var(--ink2); border: 2px solid var(--gold); padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; }
+.forkopt { background: var(--panel); border: 2px solid var(--gold); padding: 10px; cursor: pointer; font-family: inherit; color: var(--paper); text-align: left; font-size: 24px; line-height: 28px; }
+.forkopt:hover { background: #3a3325; }
+.forkopt .fd { color: var(--paper-dim); }
+#reunion-screen { align-items: center; justify-content: center; }
+#reunionpanel { width: 800px; max-height: 500px; background: var(--ink2); border: 2px solid #3a475c; padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; }
+.ally { background: var(--panel); border: 2px solid #3a475c; padding: 8px 10px; cursor: pointer; font-family: inherit; color: var(--paper); text-align: left; font-size: 24px; line-height: 28px; display: flex; gap: 10px; align-items: flex-start; }
+.ally.on { border-color: var(--ember); background: #2e2a26; }
+.ally .box { width: 16px; height: 16px; border: 2px solid var(--loess); flex: none; margin-top: 6px; }
+.ally.on .box { background: var(--ember); border-color: var(--ember); }
+.ally .ad { color: var(--paper-dim); }
+.telegram { border: 2px dashed var(--gold); padding: 10px; color: var(--paper); background: rgba(217,164,65,.06); }
+.telegram .warn { color: var(--warn); }
+#end-screen { align-items: center; justify-content: center; }
+#endpanel { width: 820px; max-height: 500px; background: var(--ink2); border: 2px solid #3a475c; padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; }
+.endgrade { display: inline-block; padding: 0 12px; border: 2px solid; }
+.endgrade.A { color: var(--ember); border-color: var(--ember); }
+.endgrade.B { color: var(--gold); border-color: var(--gold); }
+.endgrade.C { color: var(--paper-dim); border-color: var(--paper-dim); }
+.endgrade.X { color: var(--warn); border-color: var(--warn); }
+#endname { font-size: 48px; line-height: 52px; color: var(--paper); }
+#endtext { color: var(--paper); border-left: 4px solid var(--flag); padding-left: 10px; }
+#endanchor { color: #7d8ba3; }
+#reveal { color: var(--paper-dim); }
+#reveal li { margin-left: 24px; }
+#endstats { color: #7d8ba3; }
+.gallerygrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+.gslot { border: 2px solid #3a475c; background: var(--panel); padding: 6px; min-height: 88px; }
+.gslot.got { border-color: var(--loess); }
+.gslot .gn { color: var(--paper); }
+.gslot .gg { color: #7d8ba3; }
+.gslot.locked .gn { color: #4a5568; }
+.side {
+  position: fixed; top: 50%; transform: translateY(-50%); width: 264px; max-height: calc(100vh - 48px);
+  background: var(--ink2); border: 2px solid #3a475c; z-index: 2; display: none;
+  flex-direction: column; overflow: hidden;
+}
+.side h3 { flex: none; padding: 6px 10px; color: var(--loess); border-bottom: 2px solid #3a475c; font-weight: normal; font-size: 24px; }
+.side .sc { flex: 1; overflow-y: auto; padding: 8px 10px; display: flex; flex-direction: column; gap: 8px; }
+.logentry { color: var(--paper-dim); border-left: 2px solid #3a475c; padding-left: 8px; }
+.logentry.note { color: var(--paper); }
+.logentry.battle { color: var(--warn); border-color: var(--warn); }
+.logentry.anchor { color: #7d8ba3; }
+.logentry .lt { color: #55617a; }
+.dossier p { color: var(--paper-dim); }
+.dossier .dk { color: var(--loess); }
+.dossier .dv { color: var(--paper); }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--ink); }
+::-webkit-scrollbar-thumb { background: var(--loess); border: 2px solid var(--ink); }
+::-webkit-scrollbar-thumb:hover { background: var(--flag); }
+* { scrollbar-width: thin; scrollbar-color: var(--loess) var(--ink); }
+#flash { position: absolute; inset: 0; z-index: 8; pointer-events: none; opacity: 0; background: var(--warn); }
+#flash.go { animation: flash .35s steps(4); }
+@keyframes flash { 0% { opacity: .35; } 100% { opacity: 0; } }
+#toast { position: absolute; left: 50%; top: 240px; transform: translateX(-50%); z-index: 9; background: rgba(22,29,41,.9); border: 2px solid var(--ember); color: var(--ember); padding: 4px 16px; display: none; white-space: nowrap; }
+#rotateveil {
+  position: fixed; inset: 0; z-index: 50; background: rgba(14,19,28,.97);
+  display: none; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  text-align: center; padding: 24px;
+}
+#rotateveil.show { display: flex; }
+#rotateveil .rv { font-size: 48px; line-height: 56px; color: var(--ember); text-shadow: 3px 3px 0 var(--flag); }
+#rotateveil .rd { color: var(--paper-dim); }
+#rotatelamp { width: 24px; height: 32px; border: 4px solid var(--loess); background: var(--ember); box-shadow: 0 0 24px rgba(224,138,60,.6); animation: swing 1.6s steps(8) infinite alternate; }
+@keyframes swing { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+@media (max-width: 1279px) { .side { display: none !important; } }
+</style>
+</head>
+<body>
+<div id="stars"></div>
+<div id="wrap">
+  <div id="stagebox">
+    <div id="stage">
+      <canvas id="scene" width="960" height="288"></canvas>
+      <div id="header">
+        <span class="brand">长征：像素史诗</span>
+        <span class="sp"></span>
+        <button id="mutebtn" title="声音开关">灯·亮</button>
+        <button id="homebtn" title="返回标题">标题</button>
+      </div>
+      <div id="logline"></div>
+      <div id="hud">
+        <div id="topline">
+          <span id="actlabel">幕一 · 突围</span>
+          <span id="turnlabel">1934.10</span>
+          <div id="miwrap"><div id="mibar"></div><div id="mistars"></div></div>
+          <span id="milabel">0 / 25,000 里</span>
+        </div>
+        <div id="statline">
+          <span id="pursuit">追兵 <span id="pbar"><span id="pfill" style="display:block;height:100%"></span></span> <span id="plabel">4日</span></span>
+          <span class="stat" id="trstat"><b>兵力</b><span class="v" id="trv">100%</span><span class="bar" id="trbar"><i></i></span></span>
+          <span class="stat" id="sustat"><b>给养</b><span class="v" id="suv">75</span><span class="bar" id="subar"><i></i></span></span>
+          <span class="stat" id="mostat"><b>士气</b><span class="v" id="mov">65</span><span class="bar" id="mobar"><i></i></span></span>
+          <span class="stat" id="fastat"><b>信念</b><span class="v" id="fav">70</span><span class="bar" id="fabar"><i></i></span></span>
+        </div>
+      </div>
+      <div id="newsline">远方的消息：——</div>
+      <div id="eventbox" style="display:none"><span id="eventtitle"></span> <span id="eventtext"></span></div>
+      <div id="controls">
+        <div id="tempohint"></div>
+        <div id="dockrow">
+          <div id="tempo"></div>
+          <div id="cards"></div>
+        </div>
+      </div>
+      <div id="flash"></div>
+      <div id="toast"></div>
+
+      <div id="title-screen" class="overlay">
+        <div id="titleblock">
+          <div id="gametitle">长征：像素史诗</div>
+          <div id="gamesub">纪念长征胜利九十周年 · 1936–2026</div>
+          <div id="prologue">
+            <p>一支队伍，两条腿，二万五千里。</p>
+            <p>前面是封锁线、江河、雪山、草地；身后是数倍于己的追兵。</p>
+            <p>每一次选择，都在回答：为什么还能走下去？</p>
+          </div>
+          <div class="btnrow">
+            <button class="btn primary" id="startbtn">开始远征</button>
+            <button class="btn" id="continuebtn" style="display:none">继续行军</button>
+            <button class="btn ghost" id="gallerybtn">结局图鉴</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="select-screen" class="overlay hidden">
+        <div class="ovtitle">选择你的队伍</div>
+        <div class="ovsub">四路红军，完全平等。各走各的真实历史，各有各的难处。</div>
+        <div class="ovbody"><div class="teamgrid" id="teamgrid"></div></div>
+        <div class="btnrow"><button class="btn ghost" id="selectback">返回</button></div>
+      </div>
+
+      <div id="form-screen" class="overlay hidden">
+        <div class="ovtitle">开局编成</div>
+        <div class="ovsub" id="formsub"></div>
+        <div class="ovbody"><div class="formlist" id="formlist"></div></div>
+        <div class="btnrow"><button class="btn ghost" id="formback">重选队伍</button></div>
+      </div>
+
+      <div id="cut-screen" class="overlay hidden">
+        <div id="cutpanel">
+          <div id="cuttitle"></div>
+          <div class="ovsub" id="cutspan"></div>
+          <div class="ovbody" id="cutbody"></div>
+          <div class="btnrow"><button class="btn primary" id="cutbtn">继续行军</button></div>
+        </div>
+      </div>
+
+      <div id="fork-screen" class="overlay hidden">
+        <div id="forkpanel">
+          <div class="ovtitle">路线岔口 · 不可逆</div>
+          <div class="ovsub" id="forkprompt"></div>
+          <div class="ovbody" id="forkopts"></div>
+        </div>
+      </div>
+
+      <div id="reunion-screen" class="overlay hidden">
+        <div id="reunionpanel">
+          <div class="ovtitle">会师电报</div>
+          <div class="ovbody">
+            <div class="telegram" id="telegram"></div>
+            <div id="allylist" style="display:flex;flex-direction:column;gap:8px"></div>
+          </div>
+          <div class="btnrow">
+            <button class="btn primary" id="reunionbtn">发出会师电报</button>
+            <button class="btn ghost" id="refusebtn">拒绝会师</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="end-screen" class="overlay hidden">
+        <div id="endpanel">
+          <div class="ovbody">
+            <div><span class="endgrade" id="endgrade">A</span></div>
+            <div id="endname"></div>
+            <div id="endtext"></div>
+            <div id="endanchor"></div>
+            <div id="endstats"></div>
+            <div class="ovsub">终章揭晓 · 你走的这一段，史书这样写：</div>
+            <ul id="reveal"></ul>
+          </div>
+          <div class="btnrow">
+            <button class="btn primary" id="againbtn">再走一次</button>
+            <button class="btn" id="endgallerybtn">结局图鉴</button>
+            <button class="btn ghost" id="endhomebtn">返回标题</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="gallery-screen" class="overlay hidden">
+        <div class="ovtitle">结局图鉴</div>
+        <div class="ovsub" id="gallerysub"></div>
+        <div class="ovbody"><div class="gallerygrid" id="gallerygrid"></div></div>
+        <div class="btnrow"><button class="btn ghost" id="galleryback">返回</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+<aside class="side" id="sideleft"><h3>行军纪实</h3><div class="sc" id="chronicle"></div></aside>
+<aside class="side" id="sideright"><h3>队伍档案</h3><div class="sc dossier" id="dossier"></div></aside>
+<div id="rotateveil">
+  <div id="rotatelamp"></div>
+  <div class="rv">请横屏行军</div>
+  <div class="rd">这是一幅横版的长征画卷。<br>旋转设备，或横置窗口，队伍才走得开。</div>
+  <button class="btn ghost" id="rotateanyway">仍要竖屏</button>
+</div>
+<script src="js/data/teams.js"></script>
+<script src="js/data/acts.js"></script>
+<script src="js/data/cards.js"></script>
+<script src="js/data/reunion.js"></script>
+<script src="js/data/endings.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/save.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>
